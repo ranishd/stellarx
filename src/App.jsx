@@ -29,14 +29,14 @@ function ChaosPanel({ ws }) {
         <h2 className="text-sm tracking-[0.2em] text-white/60">CHAOS INJECTION</h2>
         <span className="md:hidden text-white/60">{isExpanded ? '▼' : '▲'}</span>
       </div>
-      <div className={`${isExpanded ? 'flex' : 'hidden'} md:flex flex-col gap-4`}>
-        <button onClick={() => injectChaos('DEBRIS_STORM')} className="bg-transparent border border-neon-red text-neon-red py-2 md:py-1 px-4 hover:bg-neon-red hover:text-space-black transition-colors duration-300 cursor-pointer">
+      <div className={`${isExpanded ? 'flex' : 'hidden'} md:flex flex-col gap-2 md:gap-4`}>
+        <button onClick={() => injectChaos('DEBRIS_STORM')} className="bg-transparent border border-neon-red text-neon-red py-1 md:py-1 px-4 text-[10px] md:text-sm hover:bg-neon-red hover:text-space-black transition-colors duration-300 cursor-pointer">
           {activeBtn === 'DEBRIS_STORM' ? 'INJECTING...' : 'DEBRIS STORM'}
         </button>
-        <button onClick={() => injectChaos('SOLAR_FLARE')} className="bg-transparent border border-white/50 text-white/80 py-2 md:py-1 px-4 hover:bg-white hover:text-space-black transition-colors duration-300 cursor-pointer">
+        <button onClick={() => injectChaos('SOLAR_FLARE')} className="bg-transparent border border-white/50 text-white/80 py-1 md:py-1 px-4 text-[10px] md:text-sm hover:bg-white hover:text-space-black transition-colors duration-300 cursor-pointer">
           {activeBtn === 'SOLAR_FLARE' ? 'INJECTING...' : 'SOLAR FLARE'}
         </button>
-        <button onClick={() => injectChaos('SYSTEM_FAILURE')} className="bg-red-500/20 border border-red-500 text-red-500 py-2 md:py-1 px-4 hover:bg-red-500 hover:text-white transition-colors duration-300 font-bold cursor-pointer">
+        <button onClick={() => injectChaos('SYSTEM_FAILURE')} className="bg-red-500/20 border border-red-500 text-red-500 py-1 md:py-1 px-4 text-[10px] md:text-sm hover:bg-red-500 hover:text-white transition-colors duration-300 font-bold cursor-pointer">
           {activeBtn === 'SYSTEM_FAILURE' ? 'INJECTING...' : 'SYSTEM FAILURE'}
         </button>
       </div>
@@ -78,7 +78,8 @@ function App() {
             setTimeout(() => setRecoveryBanner(false), 4000);
           }, 3000);
         } else if (msg.type === 'CLEAR_DECISION') {
-          setDecision(null);
+          // setDecision(null); // Ignored so popups stay on screen until manually closed
+
         }
       } catch (err) {
         console.error(err);
@@ -369,8 +370,18 @@ function App() {
               </div>
 
               {/* RIGHT: AI Decision Cards & Forecast */}
-              <div className="w-full md:w-[450px] pointer-events-auto flex flex-col justify-end">
-                {decision ? <DecisionCards decision={decision} coverage={coverage} /> : (
+              <div className="w-full md:w-[450px] pointer-events-auto flex flex-col justify-end relative">
+                {decision ? (
+                  <div className="relative">
+                    <button 
+                      onClick={() => setDecision(null)} 
+                      className="absolute -top-3 -right-3 md:-top-4 md:-right-4 w-8 h-8 rounded-full bg-red-500 text-white font-bold text-sm flex items-center justify-center z-50 cursor-pointer shadow-[0_0_10px_rgba(255,0,0,0.5)] border border-red-300 hover:bg-red-600 transition-colors"
+                    >
+                      ×
+                    </button>
+                    <DecisionCards decision={decision} coverage={coverage} />
+                  </div>
+                ) : (
                    <div className="hidden md:block bg-black/80 backdrop-blur-md border border-white/10 p-6 font-mono text-xs text-white/50 text-center shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                      SYSTEM NOMINAL. AWAITING CHAOS INJECTION.
                    </div>
