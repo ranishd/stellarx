@@ -31,17 +31,17 @@ export default function CommanderView({ telemetry, mood = 'NOMINAL' }) {
       <div className="texture-noise z-10"></div>
 
       {/* Central Content */}
-      <div className="relative z-20 w-full h-full flex flex-col justify-center p-16 pt-32">
+      <div className="relative z-20 w-full h-full flex flex-col justify-center p-6 md:p-16 pt-16 md:pt-32">
         
         {/* Hero Block */}
-        <div className="flex items-baseline gap-8 mb-4">
-          <span className="text-white/30 font-serif font-light text-8xl">(</span>
-          <span className="text-6xl font-sans font-bold tracking-tighter">fleet orchestration</span>
-          <span className="text-white/30 font-serif font-light text-8xl">)</span>
+        <div className="flex items-baseline gap-4 md:gap-8 mb-4">
+          <span className="text-white/30 font-serif font-light text-5xl md:text-8xl">(</span>
+          <span className="text-4xl md:text-6xl font-sans font-bold tracking-tighter">fleet orchestration</span>
+          <span className="text-white/30 font-serif font-light text-5xl md:text-8xl">)</span>
         </div>
 
-        <div className="flex items-baseline gap-8 ml-8 mb-16">
-           <div className={`text-[10rem] leading-none font-serif tracking-tighter drop-shadow-2xl transition-colors duration-1000 ${
+        <div className="flex items-baseline gap-4 md:gap-8 ml-2 md:ml-8 mb-8 md:mb-16">
+           <div className={`text-[6rem] md:text-[10rem] leading-none font-serif tracking-tighter drop-shadow-2xl transition-colors duration-1000 ${
              mood === 'CRITICAL' ? 'text-red-500' :
              mood === 'WARNING' ? 'text-orange-400' :
              mood === 'RECOVERY' ? 'text-green-400' : 'text-white'
@@ -49,21 +49,21 @@ export default function CommanderView({ telemetry, mood = 'NOMINAL' }) {
              {kpis.coverageScore?.toFixed(0) || 98}
            </div>
            <div className="flex flex-col gap-2">
-              <div className="text-lg font-bold tracking-tight uppercase bg-white text-black px-4 py-1">COVERAGE</div>
-              <div className="text-sm font-bold tracking-tight uppercase text-white/50">
+              <div className="text-sm md:text-lg font-bold tracking-tight uppercase bg-white text-black px-4 py-1">COVERAGE</div>
+              <div className="text-xs md:text-sm font-bold tracking-tight uppercase text-white/50">
                 {kpis.missionSuccessRate?.toFixed(1)}% mission success
               </div>
-              <div className="text-sm font-bold tracking-tight uppercase text-white/50">
+              <div className="text-xs md:text-sm font-bold tracking-tight uppercase text-white/50">
                 {kpis.fleetSurvivalProbability?.toFixed(1)}% survival probability
               </div>
            </div>
         </div>
 
         {/* Bottom Row: Active Missions + Strategic Forecasts + Anomalies */}
-        <div className="flex gap-8 ml-8">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-8 ml-0 md:ml-8 pb-20 md:pb-0">
 
           {/* Active Missions */}
-          <div className="flex-1 bg-black/60 backdrop-blur-xl p-8 border border-white/10 max-w-md">
+          <div className="flex-1 bg-black/60 backdrop-blur-xl p-6 md:p-8 border border-white/10 max-w-full md:max-w-md">
             <div className="text-sm font-bold tracking-tight mb-6 uppercase border-b border-white/20 pb-3 flex justify-between">
               <span>Active Missions</span>
               <span className="text-white/40 font-normal">{topMissions.length} / {telemetry?.constellation?.length || 100}</span>
@@ -85,7 +85,7 @@ export default function CommanderView({ telemetry, mood = 'NOMINAL' }) {
           </div>
 
           {/* Strategic Forecasts */}
-          <div className="flex-1 bg-black/60 backdrop-blur-xl p-8 border border-white/10 max-w-sm">
+          <div className="flex-1 bg-black/60 backdrop-blur-xl p-6 md:p-8 border border-white/10 max-w-full md:max-w-sm">
             <div className="text-sm font-bold tracking-tight mb-6 uppercase border-b border-white/20 pb-3">
               Strategic Forecast
             </div>
@@ -104,7 +104,7 @@ export default function CommanderView({ telemetry, mood = 'NOMINAL' }) {
           </div>
 
           {/* Active Manifest */}
-          <div className="w-72 bg-black/60 backdrop-blur-xl p-8 border border-white/10">
+          <div className="w-full md:w-72 bg-black/60 backdrop-blur-xl p-6 md:p-8 border border-white/10">
             <div className="text-sm font-bold tracking-tight mb-6 uppercase border-b border-white/20 pb-3">
               Anomalies
             </div>

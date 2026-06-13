@@ -254,16 +254,16 @@ function App() {
 
         {/* Main Content */}
         {viewMode === 'COMMANDER' ? (
-          <div className="col-start-1 col-end-4 row-start-2 h-[800px] pointer-events-auto">
+          <div className="col-start-1 col-end-4 row-start-2 w-full h-[60vh] md:h-[800px] pointer-events-auto">
              <CommanderView telemetry={telemetry} visualState={visualState} />
           </div>
         ) : viewMode === 'ANALYTICS' ? (
-          <div className="col-start-1 col-end-4 row-start-2 h-[800px] pointer-events-auto">
+          <div className="col-start-1 col-end-4 row-start-2 w-full h-[60vh] md:h-[800px] pointer-events-auto overflow-y-auto">
              <AutonomyAnalytics telemetry={telemetry} />
           </div>
         ) : viewMode === 'FLEET' ? (
           <>
-            <div className="col-start-1 col-end-4 row-start-2 flex items-center justify-center p-8 h-[600px] pointer-events-auto relative">
+            <div className="col-start-1 col-end-4 row-start-2 flex items-center justify-center p-0 md:p-8 w-full h-[60vh] md:h-[600px] pointer-events-auto relative">
 
                {/* Simulation Time Control */}
                <div className="absolute top-12 right-12 z-20 flex flex-col items-end text-right font-mono text-xs">
@@ -303,7 +303,7 @@ function App() {
         ) : (
           <>
             {/* EGO View: Side/Bottom Drawer */}
-            <div className={`fixed md:right-0 md:top-24 bottom-16 md:bottom-0 w-full md:w-80 h-[60vh] md:h-auto bg-black/90 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/20 font-mono text-xs text-white/60 transition-transform duration-500 z-[110] pointer-events-auto flex flex-col ${isDrawerOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'}`}>
+            <div className={`fixed left-0 right-0 md:left-auto md:right-0 md:top-24 bottom-16 md:bottom-0 w-full md:w-80 h-[60vh] md:h-auto bg-black/90 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/20 font-mono text-xs text-white/60 transition-transform duration-500 z-[110] pointer-events-auto flex flex-col ${isDrawerOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'}`}>
                <div 
                  className="absolute left-1/2 -top-8 -translate-x-1/2 md:left-auto md:-left-6 md:top-1/2 md:-translate-y-1/2 md:-translate-x-0 bg-black/90 border border-white/20 px-4 py-1 md:px-1 md:py-4 text-[10px] tracking-widest text-white/50 cursor-pointer hover:bg-white/10 hover:text-white transition-colors z-10" 
                  onClick={() => setIsDrawerOpen(!isDrawerOpen)}
