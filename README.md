@@ -1,16 +1,55 @@
-# React + Vite
+# StellarX (formerly AstraPilot)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Autonomous space fleet management powered by an AI orchestrator and real-time physics telemetry.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+StellarX is a web-based command interface and backend orchestration system designed to manage large constellations of satellites. It simulates real-time physics (Keplerian orbits, perturbations) and handles chaos events (Solar Flares, System Failures, Debris Storms) using AI-driven autonomous decisions.
 
-## React Compiler
+This project was built for the [Hackathon Name/Theme]. 
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Architecture
 
-## Expanding the ESLint configuration
+StellarX uses a split-deployment architecture for maximum performance and reliability:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Frontend (Vercel):**
+   - Built with **React + Vite**.
+   - **Three.js / react-three-fiber** for 3D orbital visualizations.
+   - **TailwindCSS** for UI styling.
+   - Connects to the backend via a 10Hz WebSocket stream.
+
+2. **Backend (Render / Railway / Stateful Host):**
+   - **Node.js + Express** HTTP server.
+   - **WebSocket Server (`ws`)** streaming live physics telemetry at 10Hz.
+   - **SQLite** database for persistent event logging and metrics.
+   - Custom physics engine and AI agent orchestrator (`@google/genai`).
+
+*Note: Due to Vercel's serverless nature which spins down functions and does not support WebSockets or persistent SQLite disks, the backend must be hosted on a stateful provider to ensure uninterrupted, real-time operation.*
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js (v18+)
+- npm or yarn
+
+### 1. Start the Backend
+The backend runs the physics simulation and WebSocket server on port 8080.
+```bash
+cd server
+npm install
+node index.js
+```
+
+### 2. Start the Frontend
+The Vite frontend runs on port 5173. In a new terminal window:
+```bash
+npm install
+npm run dev
+```
+
+## Deployment Configuration
+
+When deploying the frontend to Vercel, ensure you set the `VITE_WS_URL` environment variable to point to your deployed backend (e.g., `wss://stellarx-backend.onrender.com`). If not set, it defaults to the host's `8080` port.
+
+## License
+MIT
