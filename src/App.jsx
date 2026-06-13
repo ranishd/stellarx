@@ -12,27 +12,34 @@ const WS_URL = window.location.hostname === 'localhost' ? 'ws://localhost:8080' 
 
 function ChaosPanel({ ws }) {
   const [activeBtn, setActiveBtn] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const injectChaos = (payload) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       setActiveBtn(payload);
       ws.send(JSON.stringify({ type: 'INJECT_CHAOS', payload }));
       setTimeout(() => setActiveBtn(null), 1500);
+      setIsExpanded(false);
     }
   };
 
   return (
-    <div className="border border-white/20 p-6 flex flex-col gap-4 font-mono w-full bg-black/60 backdrop-blur-md">
-      <h2 className="text-sm tracking-[0.2em] text-white/60 mb-2">CHAOS INJECTION</h2>
-      <button onClick={() => injectChaos('DEBRIS_STORM')} className="bg-transparent border border-neon-red text-neon-red py-1 px-4 hover:bg-neon-red hover:text-space-black transition-colors duration-300 cursor-pointer">
-        {activeBtn === 'DEBRIS_STORM' ? 'INJECTING...' : 'DEBRIS STORM'}
-      </button>
-      <button onClick={() => injectChaos('SOLAR_FLARE')} className="bg-transparent border border-white/50 text-white/80 py-1 px-4 hover:bg-white hover:text-space-black transition-colors duration-300 cursor-pointer">
-        {activeBtn === 'SOLAR_FLARE' ? 'INJECTING...' : 'SOLAR FLARE'}
-      </button>
-      <button onClick={() => injectChaos('SYSTEM_FAILURE')} className="bg-red-500/20 border border-red-500 text-red-500 py-1 px-4 hover:bg-red-500 hover:text-white transition-colors duration-300 font-bold cursor-pointer">
-        {activeBtn === 'SYSTEM_FAILURE' ? 'INJECTING...' : 'SYSTEM FAILURE'}
-      </button>
+    <div className="border border-white/20 p-4 md:p-6 flex flex-col gap-4 font-mono w-full bg-black/60 backdrop-blur-md">
+      <div className="flex justify-between items-center cursor-pointer md:cursor-default" onClick={() => setIsExpanded(!isExpanded)}>
+        <h2 className="text-sm tracking-[0.2em] text-white/60">CHAOS INJECTION</h2>
+        <span className="md:hidden text-white/60">{isExpanded ? '▼' : '▲'}</span>
+      </div>
+      <div className={`${isExpanded ? 'flex' : 'hidden'} md:flex flex-col gap-4`}>
+        <button onClick={() => injectChaos('DEBRIS_STORM')} className="bg-transparent border border-neon-red text-neon-red py-2 md:py-1 px-4 hover:bg-neon-red hover:text-space-black transition-colors duration-300 cursor-pointer">
+          {activeBtn === 'DEBRIS_STORM' ? 'INJECTING...' : 'DEBRIS STORM'}
+        </button>
+        <button onClick={() => injectChaos('SOLAR_FLARE')} className="bg-transparent border border-white/50 text-white/80 py-2 md:py-1 px-4 hover:bg-white hover:text-space-black transition-colors duration-300 cursor-pointer">
+          {activeBtn === 'SOLAR_FLARE' ? 'INJECTING...' : 'SOLAR FLARE'}
+        </button>
+        <button onClick={() => injectChaos('SYSTEM_FAILURE')} className="bg-red-500/20 border border-red-500 text-red-500 py-2 md:py-1 px-4 hover:bg-red-500 hover:text-white transition-colors duration-300 font-bold cursor-pointer">
+          {activeBtn === 'SYSTEM_FAILURE' ? 'INJECTING...' : 'SYSTEM FAILURE'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -199,11 +206,11 @@ function App() {
       <div className={`poster-grid relative z-10 overflow-hidden ${viewMode === 'EGO' ? 'pointer-events-none' : ''}`}>
         
         {/* Top Bar */}
-        <div className="col-start-1 col-end-4 row-start-1 flex justify-between items-start mb-8 pointer-events-auto bg-black/40 backdrop-blur-md p-4 border-b border-white/10 z-50">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-8">
+        <div className="col-start-1 col-end-4 row-start-1 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pointer-events-auto bg-black/40 backdrop-blur-md p-4 border-b border-white/10 z-50">
+          <div className="flex flex-col gap-4 w-full md:w-auto">
+            <div className="flex items-center justify-between md:justify-start gap-8">
               <h1 className="text-xl font-bold tracking-[0.2em] text-white">STELLAR<span className="text-white/50">X</span></h1>
-              <div className="text-xs font-mono text-white/50 tracking-widest flex items-center gap-6">
+              <div className="hidden md:flex text-xs font-mono text-white/50 tracking-widest items-center gap-6">
                 <button onClick={() => setViewMode('COMMANDER')} className={`hover:text-white transition-colors pb-1 border-b-2 cursor-pointer ${viewMode === 'COMMANDER' ? 'text-white border-white' : 'border-transparent'}`}>COMMANDER</button>
                 <button onClick={() => setViewMode('FLEET')} className={`hover:text-white transition-colors pb-1 border-b-2 cursor-pointer ${viewMode === 'FLEET' ? 'text-white border-white' : 'border-transparent'}`}>FLEET</button>
                 <button onClick={() => setViewMode('EGO')} className={`hover:text-white transition-colors pb-1 border-b-2 cursor-pointer ${viewMode === 'EGO' ? 'text-white border-white' : 'border-transparent'}`}>EGO VIEW</button>
@@ -219,7 +226,7 @@ function App() {
           </div>
           
           {/* Fleet Intelligence Index (Center) */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 flex-col items-center">
             <div className="text-[9px] tracking-[0.3em] text-white/40 mb-1">STELLAR INDEX</div>
             <div className="text-3xl font-serif tracking-tighter drop-shadow-md text-white">
               {stellarIndex}
@@ -227,17 +234,18 @@ function App() {
           </div>
           
           {/* Live Global Metrics */}
-          <div className="flex gap-8 items-center text-xs font-mono text-right mt-1">
-             <div><span className="text-white/40 block text-[9px] mb-1 tracking-widest">COVERAGE</span><span className="text-white">{coverage.toFixed(0)}%</span></div>
-             <div><span className="text-white/40 block text-[9px] mb-1 tracking-widest">MISSION SUCCESS</span><span className="text-white">{missionSuccess.toFixed(1)}%</span></div>
-             <div className="border-l border-white/20 pl-6">
+          <div className="flex overflow-x-auto w-full md:w-auto gap-6 md:gap-8 items-center text-xs font-mono md:text-right mt-4 md:mt-1 pb-2 md:pb-0 hide-scrollbar">
+             <div className="flex-shrink-0"><span className="text-white/40 block text-[9px] mb-1 tracking-widest">INDEX</span><span className="text-white md:hidden">{stellarIndex}</span></div>
+             <div className="flex-shrink-0"><span className="text-white/40 block text-[9px] mb-1 tracking-widest">COVERAGE</span><span className="text-white">{coverage.toFixed(0)}%</span></div>
+             <div className="flex-shrink-0"><span className="text-white/40 block text-[9px] mb-1 tracking-widest">MISSION SUCCESS</span><span className="text-white">{missionSuccess.toFixed(1)}%</span></div>
+             <div className="flex-shrink-0 border-l border-white/20 pl-4 md:pl-6">
                 <span className="text-white/40 block text-[9px] mb-1 tracking-widest">AUTONOMOUS DECISIONS</span>
                 <span key={autoDecisions} className="text-cyan-400 text-lg font-bold inline-block animate-[pulse_0.5s_ease-out]">{autoDecisions}</span>
              </div>
              <button 
                onClick={runDemo} 
                disabled={demoRunning}
-               className={`ml-4 px-4 py-2 border text-[10px] tracking-widest cursor-pointer transition-colors ${demoRunning ? 'border-white/20 text-white/30' : 'border-green-400 text-green-400 hover:bg-green-400 hover:text-black'}`}
+               className={`flex-shrink-0 ml-2 md:ml-4 px-4 py-2 border text-[10px] tracking-widest cursor-pointer transition-colors ${demoRunning ? 'border-white/20 text-white/30' : 'border-green-400 text-green-400 hover:bg-green-400 hover:text-black'}`}
              >
                {demoRunning ? 'RUNNING...' : 'DEMO'}
              </button>
@@ -294,17 +302,17 @@ function App() {
           </>
         ) : (
           <>
-            {/* EGO View: Side Drawer */}
-            <div className={`fixed right-0 top-24 bottom-0 w-80 bg-black/90 backdrop-blur-xl border-l border-white/20 font-mono text-xs text-white/60 transition-transform duration-500 z-[110] pointer-events-auto flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            {/* EGO View: Side/Bottom Drawer */}
+            <div className={`fixed md:right-0 md:top-24 bottom-16 md:bottom-0 w-full md:w-80 h-[60vh] md:h-auto bg-black/90 backdrop-blur-xl border-t md:border-t-0 md:border-l border-white/20 font-mono text-xs text-white/60 transition-transform duration-500 z-[110] pointer-events-auto flex flex-col ${isDrawerOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'}`}>
                <div 
-                 className="absolute -left-6 top-1/2 -translate-y-1/2 bg-black/90 border border-white/20 px-1 py-4 text-[10px] tracking-widest text-white/50 cursor-pointer hover:bg-white/10 hover:text-white transition-colors z-10" 
-                 style={{ writingMode: 'vertical-rl' }}
+                 className="absolute left-1/2 -top-8 -translate-x-1/2 md:left-auto md:-left-6 md:top-1/2 md:-translate-y-1/2 md:-translate-x-0 bg-black/90 border border-white/20 px-4 py-1 md:px-1 md:py-4 text-[10px] tracking-widest text-white/50 cursor-pointer hover:bg-white/10 hover:text-white transition-colors z-10" 
                  onClick={() => setIsDrawerOpen(!isDrawerOpen)}
                >
-                 TELEMETRY
+                 <span className="block md:hidden">TELEMETRY {isDrawerOpen ? '▼' : '▲'}</span>
+                 <span className="hidden md:block" style={{ writingMode: 'vertical-rl' }}>TELEMETRY</span>
                </div>
                
-               <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 flex flex-col gap-6 pb-16">
+               <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 flex flex-col gap-6 pb-24 md:pb-16">
                  <h2 className="text-sm text-white tracking-[0.2em] mb-2">RAW TELEMETRY</h2>
                  <div className="grid grid-cols-2 gap-4">
                    <div><span className="block text-white/30">NODE ID</span><span className="text-white">{sat.id}</span></div>
@@ -348,22 +356,22 @@ function App() {
             </div>
 
             {/* Bottom Controls */}
-            <div className="fixed bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none z-[100] gap-4">
+            <div className="fixed bottom-20 md:bottom-8 left-4 right-4 md:left-8 md:right-8 flex flex-col md:flex-row justify-between items-center md:items-end pointer-events-none z-[100] gap-4">
               
               {/* LEFT: Chaos */}
-              <div className="w-[300px] pointer-events-auto flex flex-col gap-4">
+              <div className="w-full md:w-[300px] pointer-events-auto flex flex-col gap-4">
                 <ChaosPanel ws={ws} />
               </div>
               
               {/* CENTER: Agent Activity */}
-              <div className="flex-1 max-w-[600px] pointer-events-auto h-[180px]">
+              <div className="hidden md:block flex-1 max-w-[600px] pointer-events-auto h-[180px]">
                 {decision && <AgentActivityGraph decision={decision} />}
               </div>
 
               {/* RIGHT: AI Decision Cards & Forecast */}
-              <div className="w-[450px] pointer-events-auto flex flex-col justify-end">
+              <div className="w-full md:w-[450px] pointer-events-auto flex flex-col justify-end">
                 {decision ? <DecisionCards decision={decision} coverage={coverage} /> : (
-                   <div className="bg-black/80 backdrop-blur-md border border-white/10 p-6 font-mono text-xs text-white/50 text-center shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                   <div className="hidden md:block bg-black/80 backdrop-blur-md border border-white/10 p-6 font-mono text-xs text-white/50 text-center shadow-[0_0_20px_rgba(0,0,0,0.5)]">
                      SYSTEM NOMINAL. AWAITING CHAOS INJECTION.
                    </div>
                 )}
@@ -372,6 +380,26 @@ function App() {
           </>
         )}
 
+      </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-lg border-t border-white/10 z-[120] flex justify-around items-center px-2 font-mono text-[10px] tracking-widest pointer-events-auto">
+        <button onClick={() => setViewMode('COMMANDER')} className={`flex flex-col items-center gap-1 ${viewMode === 'COMMANDER' ? 'text-white' : 'text-white/40'}`}>
+          <span className="text-lg">⊚</span>
+          <span>CMD</span>
+        </button>
+        <button onClick={() => setViewMode('FLEET')} className={`flex flex-col items-center gap-1 ${viewMode === 'FLEET' ? 'text-white' : 'text-white/40'}`}>
+          <span className="text-lg">▤</span>
+          <span>FLEET</span>
+        </button>
+        <button onClick={() => setViewMode('EGO')} className={`flex flex-col items-center gap-1 ${viewMode === 'EGO' ? 'text-white' : 'text-white/40'}`}>
+          <span className="text-lg">◎</span>
+          <span>EGO</span>
+        </button>
+        <button onClick={() => setViewMode('ANALYTICS')} className={`flex flex-col items-center gap-1 ${viewMode === 'ANALYTICS' ? 'text-green-400' : 'text-white/40'}`}>
+          <span className="text-lg">◱</span>
+          <span>IMPACT</span>
+        </button>
       </div>
     </>
   );
