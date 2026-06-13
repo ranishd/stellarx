@@ -7,6 +7,25 @@
   --color-stellar-gold: #E5A95A;
   --color-nebula-crimson: #9E2A46;
   --color-earth-amber: #FFB37C;
+  
+  /* Override Default Red with requested #9E2A46 crimson derivatives */
+  --color-red-300: #C24D6D;
+  --color-red-400: #B13B59;
+  --color-red-500: #9E2A46;
+  --color-red-600: #822239;
+  --color-red-900: #42101C;
+
+  /* Override Default Green with Old Money Emerald/Sage */
+  --color-green-400: #6DA481;
+  --color-green-500: #4A8F6A;
+  --color-green-900: #1B3C2A;
+
+  /* Override Default Blue/Cyan with Old Money Slate/Navy */
+  --color-cyan-400: #7A9BBA;
+  --color-blue-400: #5C7A99;
+  --color-blue-500: #466380;
+  --color-blue-900: #1A2836;
+
   --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Playfair Display', ui-serif, Georgia, serif;
   --font-mono: 'Space Grotesk', ui-monospace, monospace;
