@@ -7,7 +7,7 @@ import * as THREE from 'three';
 function getOrbitPath(a, e, i, raan, arg_p) {
   const points = [];
   const segments = 64;
-  const r = (a - 6371) / 100;
+  const r = 5.2 + (a - 6371) / 400;
   for (let k = 0; k <= segments; k++) {
     const ta = (k / segments) * Math.PI * 2;
     const x_orb = r * Math.cos(ta);
@@ -24,7 +24,7 @@ function SatNode({ node, isFailing, isReceiving, globalMood }) {
   const ref = useRef();
   const [hovered, setHover] = useState(false);
   
-  const r = (node.a - 6371) / 100;
+  const r = 5.2 + (node.a - 6371) / 400;
   const i = node.i;
   const raan = node.raan;
   const ta = node.trueAnomaly;
@@ -129,7 +129,7 @@ function HandoffPulse({ startNode, endNode }) {
   const meshRef = useRef();
   
   const getPos = (n) => {
-    const r = (n.a - 6371) / 100;
+    const r = 5.2 + (n.a - 6371) / 400;
     const x = r*Math.cos(n.trueAnomaly)*Math.cos(n.raan) - r*Math.sin(n.trueAnomaly)*Math.cos(n.i)*Math.sin(n.raan);
     const y = r*Math.cos(n.trueAnomaly)*Math.sin(n.raan) + r*Math.sin(n.trueAnomaly)*Math.cos(n.i)*Math.cos(n.raan);
     const z = r*Math.sin(n.trueAnomaly)*Math.sin(n.i);
@@ -182,7 +182,8 @@ function Constellation({ nodes, timeMultiplier, activeAnomalies, mood, handoffEv
     for (let j = 0; j < nodes.length; j+=3) {
       for (let k = j+1; k < nodes.length; k+=3) {
         const n1 = nodes[j]; const n2 = nodes[k];
-        const r1 = (n1.a - 6371)/100; const r2 = (n2.a - 6371)/100;
+        const r1 = 5.2 + (n1.a - 6371) / 400; 
+        const r2 = 5.2 + (n2.a - 6371) / 400;
         const p1 = new THREE.Vector3(
           r1*Math.cos(n1.trueAnomaly)*Math.cos(n1.raan) - r1*Math.sin(n1.trueAnomaly)*Math.cos(n1.i)*Math.sin(n1.raan),
           r1*Math.cos(n1.trueAnomaly)*Math.sin(n1.raan) + r1*Math.sin(n1.trueAnomaly)*Math.cos(n1.i)*Math.cos(n1.raan),
