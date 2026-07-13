@@ -24,17 +24,21 @@ function SatNode({ node, isFailing, isReceiving, globalMood }) {
   const ref = useRef();
   const [hovered, setHover] = useState(false);
   
-  const r = 5.2 + (node.a - 6371) / 400;
-  const i = node.i;
-  const raan = node.raan;
-  const ta = node.trueAnomaly;
+  const targetPos = useMemo(() => {
+    const r = 5.2 + (node.a - 6371) / 400;
+    const i = node.i;
+    const raan = node.raan;
+    const ta = node.trueAnomaly;
 
-  const x_orb = r * Math.cos(ta);
-  const y_orb = r * Math.sin(ta);
+    const x_orb = r * Math.cos(ta);
+    const y_orb = r * Math.sin(ta);
 
-  const x = x_orb * Math.cos(raan) - y_orb * Math.cos(i) * Math.sin(raan);
-  const y = x_orb * Math.sin(raan) + y_orb * Math.cos(i) * Math.cos(raan);
-  const z = y_orb * Math.sin(i);
+    const x = x_orb * Math.cos(raan) - y_orb * Math.cos(i) * Math.sin(raan);
+    const y = x_orb * Math.sin(raan) + y_orb * Math.cos(i) * Math.cos(raan);
+    const z = y_orb * Math.sin(i);
+    
+    return new THREE.Vector3(x, y, z);
+  }, [node.a, node.i, node.raan, node.trueAnomaly]);
 
   // Mission Importance -> Size
   const priority = node.mission?.priority || 70;
@@ -61,8 +65,17 @@ function SatNode({ node, isFailing, isReceiving, globalMood }) {
     }
   }
 
-  useFrame((state) => {
+  // Smooth initialization
+  React.useEffect(() => {
     if (ref.current) {
+      ref.current.position.copy(targetPos);
+    }
+  }, []);
+
+  useFrame((state, delta) => {
+    if (ref.current) {
+      // Smoothly fly to the new position instead of glitchy snapping
+      ref.current.position.lerp(targetPos, 4 * delta);
       ref.current.lookAt(0, 0, 0);
       // Pulse effect for failing or receiving nodes
       if (isFailing || isReceiving) {
@@ -82,7 +95,7 @@ function SatNode({ node, isFailing, isReceiving, globalMood }) {
       <Line points={orbitPoints} color={color} opacity={0.03} transparent lineWidth={0.5} />
 
       {/* Satellite Body & Cone */}
-      <group position={[x, y, z]} ref={ref}>
+      <group ref={ref}>
         {/* The dot */}
         <mesh
           onPointerOver={(e) => { e.stopPropagation(); setHover(true); }}
@@ -206,9 +219,7 @@ function Constellation({ nodes, timeMultiplier, activeAnomalies, mood, handoffEv
   const handoffTarget = handoffEvent ? nodes.find(n => n.id === handoffEvent.to) : null;
 
   useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += 0.001 * timeMultiplier;
-    }
+    // Removed unphysical bulk constellation rotation to match correct orbital mechanics
   });
 
   // Link color adapts to state
