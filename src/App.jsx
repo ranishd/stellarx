@@ -58,38 +58,64 @@ function App() {
   const [activeChaosBtn, setActiveChaosBtn] = useState(null);
 
   useEffect(() => {
-    const socket = new WebSocket(WS_URL);
-    setWs(socket);
+    let socket;
+    let reconnectTimer;
+    let isConnected = false;
 
-    socket.onopen = () => console.log('Connected to StellarX Telemetry');
-    
-    socket.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'TELEMETRY_STREAM') {
-          setTelemetry(msg.data);
-        } else if (msg.type === 'AGENT_DECISION') {
-          setDecision(msg.data);
-          setIsAwaitingAI(false);
-          setActiveChaosBtn(null);
-        } else if (msg.type === 'MISSION_HANDOFF') {
-          setHandoff(msg.data);
-          // Show handoff for 3s, then flash recovery banner
-          setTimeout(() => {
-            setHandoff(null);
-            setRecoveryBanner(true);
-            setTimeout(() => setRecoveryBanner(false), 4000);
-          }, 3000);
-        } else if (msg.type === 'CLEAR_DECISION') {
-          // setDecision(null); // Ignored so popups stay on screen until manually closed
+    const connect = () => {
+      socket = new WebSocket(WS_URL);
+      setWs(socket);
 
+      socket.onopen = () => {
+        console.log('Connected to StellarX Telemetry');
+        isConnected = true;
+      };
+      
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'TELEMETRY_STREAM') {
+            setTelemetry(msg.data);
+          } else if (msg.type === 'AGENT_DECISION') {
+            setDecision(msg.data);
+            setIsAwaitingAI(false);
+            setActiveChaosBtn(null);
+          } else if (msg.type === 'MISSION_HANDOFF') {
+            setHandoff(msg.data);
+            // Show handoff for 3s, then flash recovery banner
+            setTimeout(() => {
+              setHandoff(null);
+              setRecoveryBanner(true);
+              setTimeout(() => setRecoveryBanner(false), 4000);
+            }, 3000);
+          } else if (msg.type === 'CLEAR_DECISION') {
+            // setDecision(null); // Ignored so popups stay on screen until manually closed
+          }
+        } catch (err) {
+          console.error(err);
         }
-      } catch (err) {
-        console.error(err);
-      }
+      };
+
+      socket.onclose = () => {
+        if (isConnected) console.log('WebSocket disconnected. Attempting to reconnect...');
+        isConnected = false;
+        // Try to reconnect every 3 seconds
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(connect, 3000);
+      };
+
+      socket.onerror = (err) => {
+        console.error('WebSocket error:', err);
+        socket.close(); // Force close to trigger onclose and reconnect
+      };
     };
 
-    return () => socket.close();
+    connect();
+
+    return () => {
+      clearTimeout(reconnectTimer);
+      if (socket) socket.close();
+    };
   }, []);
 
   // DEMO MODE
