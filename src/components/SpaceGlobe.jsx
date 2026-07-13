@@ -24,8 +24,9 @@ function SatNode({ node, isFailing, isReceiving, globalMood }) {
   const ref = useRef();
   const [hovered, setHover] = useState(false);
   
+  const r = 5.2 + (node.a - 6371) / 400;
+
   const targetPos = useMemo(() => {
-    const r = 5.2 + (node.a - 6371) / 400;
     const i = node.i;
     const raan = node.raan;
     const ta = node.trueAnomaly;
