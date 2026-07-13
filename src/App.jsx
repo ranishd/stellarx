@@ -56,6 +56,7 @@ function App() {
   const [demoOverlay, setDemoOverlay] = useState(null);
   const [isAwaitingAI, setIsAwaitingAI] = useState(false);
   const [activeChaosBtn, setActiveChaosBtn] = useState(null);
+  const [isWsConnected, setIsWsConnected] = useState(false);
 
   useEffect(() => {
     let socket;
@@ -69,6 +70,7 @@ function App() {
       socket.onopen = () => {
         console.log('Connected to StellarX Telemetry');
         isConnected = true;
+        setIsWsConnected(true);
       };
       
       socket.onmessage = (event) => {
@@ -99,6 +101,7 @@ function App() {
       socket.onclose = () => {
         if (isConnected) console.log('WebSocket disconnected. Attempting to reconnect...');
         isConnected = false;
+        setIsWsConnected(false);
         // Try to reconnect every 3 seconds
         clearTimeout(reconnectTimer);
         reconnectTimer = setTimeout(connect, 3000);
@@ -252,6 +255,12 @@ function App() {
             <div className={`font-mono text-[10px] tracking-widest flex items-center gap-3 px-3 py-1 rounded w-fit ${statusColors[visualState]}`}>
               <span className="text-inherit opacity-60">AI STATUS</span>
               <span className="font-bold uppercase">{aiStatus}</span>
+            </div>
+            
+            {/* WS Connection Status */}
+            <div className={`font-mono text-[10px] tracking-widest flex items-center gap-3 px-3 py-1 rounded w-fit ${isWsConnected ? 'bg-green-900/50 text-green-400 border border-green-500/50' : 'bg-red-900/50 text-red-400 border border-red-500/50 animate-pulse'}`}>
+              <span className="opacity-80">SERVER LINK</span>
+              <span className="font-bold uppercase">{isWsConnected ? 'SECURE' : 'OFFLINE - RECONNECTING'}</span>
             </div>
           </div>
           

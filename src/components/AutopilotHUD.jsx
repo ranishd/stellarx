@@ -189,7 +189,9 @@ export default function AutopilotHUD({ telemetry, decision, visualState }) {
           </group>
 
           {/* Grid helper to give scale/velocity context */}
-          <gridHelper args={[200, 100, '#ffffff', '#ffffff']} position={[0, -3, 0]} material-opacity={0.05} material-transparent />
+          <gridHelper args={[200, 100, '#ffffff', '#ffffff']} position={[0, -3, 0]}>
+             <lineBasicMaterial attach="material" transparent opacity={0.05} />
+          </gridHelper>
 
           {/* Let user pan around to feel the 3D space */}
           <OrbitControls enableZoom={true} maxDistance={60} minDistance={2} enablePan={true} autoRotate autoRotateSpeed={0.5} target={[-2, 0, 0]} />
