@@ -177,6 +177,12 @@ class PhysicsEngine {
 
             // Simple orbital decay
             sat.altitude -= 0.005 * delta;
+            
+            // Prevent satellites from falling into negative altitude (the server has been running for weeks!)
+            if (sat.altitude < 300) {
+                sat.altitude = 400 + Math.random() * 200;
+            }
+
             sat.a = EARTH_RADIUS + sat.altitude;
             sat.velocity = Math.sqrt(MU / sat.a);
 
