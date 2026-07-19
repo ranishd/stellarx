@@ -7,44 +7,37 @@ import * as THREE from 'three';
 function getOrbitPath(a, e, i, raan, arg_p) {
   const points = [];
   const segments = 64;
-  const r = 5.2 + (a - 6371) / 400;
+  const r = (a / 6371) * 5;
   for (let k = 0; k <= segments; k++) {
     const ta = (k / segments) * Math.PI * 2;
-    const x_orb = r * Math.cos(ta);
-    const y_orb = r * Math.sin(ta);
-    const x = x_orb * Math.cos(raan) - y_orb * Math.cos(i) * Math.sin(raan);
-    const y = x_orb * Math.sin(raan) + y_orb * Math.cos(i) * Math.cos(raan);
-    const z = y_orb * Math.sin(i);
-    points.push(new THREE.Vector3(x, y, z));
+    const theta = ta + (arg_p || 0);
+    const x_orb = r * Math.cos(theta);
+    const y_orb = r * Math.sin(theta);
+    
+    const x_m = x_orb * Math.cos(raan) - y_orb * Math.cos(i) * Math.sin(raan);
+    const y_m = x_orb * Math.sin(raan) + y_orb * Math.cos(i) * Math.cos(raan);
+    const z_m = y_orb * Math.sin(i);
+    
+    // Convert to Three.js coordinates (Y is up)
+    points.push(new THREE.Vector3(x_m, z_m, -y_m));
   }
   return points;
 }
 
-function SatNode({ node, isFailing, isReceiving, globalMood }) {
+function SatNode({ node, isFailing, isReceiving, globalMood, timeMultiplier = 1 }) {
   const ref = useRef();
   const [hovered, setHover] = useState(false);
+  const ta = useRef(node.trueAnomaly);
+  const lastBackendTa = useRef(node.trueAnomaly);
   
-  const r = 5.2 + (node.a - 6371) / 400;
-
-  const targetPos = useMemo(() => {
-    const i = node.i;
-    const raan = node.raan;
-    const ta = node.trueAnomaly;
-
-    const x_orb = r * Math.cos(ta);
-    const y_orb = r * Math.sin(ta);
-
-    const x = x_orb * Math.cos(raan) - y_orb * Math.cos(i) * Math.sin(raan);
-    const y = x_orb * Math.sin(raan) + y_orb * Math.cos(i) * Math.cos(raan);
-    const z = y_orb * Math.sin(i);
-    
-    return new THREE.Vector3(x, y, z);
-  }, [node.a, node.i, node.raan, node.trueAnomaly]);
+  const r = (node.a / 6371) * 5;
+  const i = node.i;
+  const raan = node.raan;
 
   // Mission Importance -> Size
   const priority = node.mission?.priority || 70;
-  // Map priority 70-100 to size 0.05-0.12
-  const baseSize = 0.05 + ((priority - 70) / 30) * 0.07;
+  // Map priority to a slightly smaller size since orbit is closer
+  const baseSize = 0.03 + ((priority - 70) / 30) * 0.04;
   let size = baseSize;
 
   // Confidence Halo & Constellation State -> Color
@@ -66,18 +59,37 @@ function SatNode({ node, isFailing, isReceiving, globalMood }) {
     }
   }
 
-  // Smooth initialization
-  React.useEffect(() => {
-    if (ref.current) {
-      ref.current.position.copy(targetPos);
-    }
-  }, []);
-
   useFrame((state, delta) => {
     if (ref.current) {
-      // Smoothly fly to the new position instead of glitchy snapping
-      ref.current.position.lerp(targetPos, 4 * delta);
+      // 1. Advance true anomaly smoothly at 60fps
+      const n = Math.sqrt(398600 / Math.pow(node.a, 3));
+      ta.current += n * 60 * timeMultiplier * delta;
+
+      // 2. Only sync with backend if we drifted massively (prevents backward-pulling stutters)
+      if (node.trueAnomaly !== lastBackendTa.current) {
+        let diff = node.trueAnomaly - ta.current;
+        if (diff > Math.PI) diff -= Math.PI * 2;
+        if (diff < -Math.PI) diff += Math.PI * 2;
+        
+        // If out of sync by more than ~11 degrees, snap it (handles backend resets)
+        if (Math.abs(diff) > 0.2) {
+          ta.current = node.trueAnomaly;
+        }
+        lastBackendTa.current = node.trueAnomaly;
+      }
+
+      // 3. Calculate new 3D position
+      const theta = ta.current + (node.arg_p || 0);
+      const x_orb = r * Math.cos(theta);
+      const y_orb = r * Math.sin(theta);
+
+      const x_m = x_orb * Math.cos(raan) - y_orb * Math.cos(i) * Math.sin(raan);
+      const y_m = x_orb * Math.sin(raan) + y_orb * Math.cos(i) * Math.cos(raan);
+      const z_m = y_orb * Math.sin(i);
+
+      ref.current.position.set(x_m, z_m, -y_m);
       ref.current.lookAt(0, 0, 0);
+
       // Pulse effect for failing or receiving nodes
       if (isFailing || isReceiving) {
         const scale = 1 + Math.sin(state.clock.elapsedTime * 10) * 0.5;
@@ -143,11 +155,14 @@ function HandoffPulse({ startNode, endNode }) {
   const meshRef = useRef();
   
   const getPos = (n) => {
-    const r = 5.2 + (n.a - 6371) / 400;
-    const x = r*Math.cos(n.trueAnomaly)*Math.cos(n.raan) - r*Math.sin(n.trueAnomaly)*Math.cos(n.i)*Math.sin(n.raan);
-    const y = r*Math.cos(n.trueAnomaly)*Math.sin(n.raan) + r*Math.sin(n.trueAnomaly)*Math.cos(n.i)*Math.cos(n.raan);
-    const z = r*Math.sin(n.trueAnomaly)*Math.sin(n.i);
-    return new THREE.Vector3(x, y, z);
+    const r = (n.a / 6371) * 5;
+    const theta = n.trueAnomaly + (n.arg_p || 0);
+    const x_orb = r * Math.cos(theta);
+    const y_orb = r * Math.sin(theta);
+    const x_m = x_orb * Math.cos(n.raan) - y_orb * Math.cos(n.i) * Math.sin(n.raan);
+    const y_m = x_orb * Math.sin(n.raan) + y_orb * Math.cos(n.i) * Math.cos(n.raan);
+    const z_m = y_orb * Math.sin(n.i);
+    return new THREE.Vector3(x_m, z_m, -y_m);
   };
 
   useFrame((state) => {
@@ -196,19 +211,25 @@ function Constellation({ nodes, timeMultiplier, activeAnomalies, mood, handoffEv
     for (let j = 0; j < nodes.length; j+=3) {
       for (let k = j+1; k < nodes.length; k+=3) {
         const n1 = nodes[j]; const n2 = nodes[k];
-        const r1 = 5.2 + (n1.a - 6371) / 400; 
-        const r2 = 5.2 + (n2.a - 6371) / 400;
-        const p1 = new THREE.Vector3(
-          r1*Math.cos(n1.trueAnomaly)*Math.cos(n1.raan) - r1*Math.sin(n1.trueAnomaly)*Math.cos(n1.i)*Math.sin(n1.raan),
-          r1*Math.cos(n1.trueAnomaly)*Math.sin(n1.raan) + r1*Math.sin(n1.trueAnomaly)*Math.cos(n1.i)*Math.cos(n1.raan),
-          r1*Math.sin(n1.trueAnomaly)*Math.sin(n1.i)
-        );
-        const p2 = new THREE.Vector3(
-          r2*Math.cos(n2.trueAnomaly)*Math.cos(n2.raan) - r2*Math.sin(n2.trueAnomaly)*Math.cos(n2.i)*Math.sin(n2.raan),
-          r2*Math.cos(n2.trueAnomaly)*Math.sin(n2.raan) + r2*Math.sin(n2.trueAnomaly)*Math.cos(n2.i)*Math.cos(n2.raan),
-          r2*Math.sin(n2.trueAnomaly)*Math.sin(n2.i)
-        );
-        if (p1.distanceTo(p2) < 4) {
+        const r1 = (n1.a / 6371) * 5; const r2 = (n2.a / 6371) * 5;
+        
+        const theta1 = n1.trueAnomaly + (n1.arg_p || 0);
+        const xo1 = r1 * Math.cos(theta1);
+        const yo1 = r1 * Math.sin(theta1);
+        const xm1 = xo1 * Math.cos(n1.raan) - yo1 * Math.cos(n1.i) * Math.sin(n1.raan);
+        const ym1 = xo1 * Math.sin(n1.raan) + yo1 * Math.cos(n1.i) * Math.cos(n1.raan);
+        const zm1 = yo1 * Math.sin(n1.i);
+        const p1 = new THREE.Vector3(xm1, zm1, -ym1);
+
+        const theta2 = n2.trueAnomaly + (n2.arg_p || 0);
+        const xo2 = r2 * Math.cos(theta2);
+        const yo2 = r2 * Math.sin(theta2);
+        const xm2 = xo2 * Math.cos(n2.raan) - yo2 * Math.cos(n2.i) * Math.sin(n2.raan);
+        const ym2 = xo2 * Math.sin(n2.raan) + yo2 * Math.cos(n2.i) * Math.cos(n2.raan);
+        const zm2 = yo2 * Math.sin(n2.i);
+        const p2 = new THREE.Vector3(xm2, zm2, -ym2);
+
+        if (p1.distanceTo(p2) < 3) {
           links.push([p1, p2]);
         }
       }
@@ -219,9 +240,7 @@ function Constellation({ nodes, timeMultiplier, activeAnomalies, mood, handoffEv
   const handoffSource = handoffEvent ? nodes.find(n => n.id === handoffEvent.from) : null;
   const handoffTarget = handoffEvent ? nodes.find(n => n.id === handoffEvent.to) : null;
 
-  useFrame((state) => {
-    // Removed unphysical bulk constellation rotation to match correct orbital mechanics
-  });
+  // Removed unphysical group rotation that distorted orbits
 
   // Link color adapts to state
   let linkColor = '#00ffff';
@@ -241,6 +260,7 @@ function Constellation({ nodes, timeMultiplier, activeAnomalies, mood, handoffEv
           isFailing={node.status === 'OFFLINE' || (sysFail && i === 0)} 
           isReceiving={handoffEvent && node.id === handoffEvent.to}
           globalMood={mood}
+          timeMultiplier={timeMultiplier}
         />
       ))}
 
@@ -264,7 +284,7 @@ function CoverageHeatmap({ mood }) {
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
     if (mapRef.current) {
-      mapRef.current.rotation.y += 0.0005;
+      mapRef.current.rotation.y += 0.0005 * (mood === 'ANALYSIS' ? 2 : 1);
       // Pulse smoothly if analysis
       if (mood === 'ANALYSIS') {
         mapRef.current.material.opacity = 0.3 + Math.sin(t * 5) * 0.1;
@@ -294,6 +314,12 @@ function Earth({ mood }) {
 
   // Atmosphere tint always blue to keep things calm
   let atmoColor = "#0088ff";
+
+  useFrame((state) => {
+    if (earthRef.current) {
+      earthRef.current.rotation.y += 0.0005;
+    }
+  });
 
   return (
     <group>
